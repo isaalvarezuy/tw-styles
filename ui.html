@@ -1,0 +1,16 @@
+<button id="generate">Generate color styles</button>
+<button id="cancel">Cancel</button>
+<div id="colors-container"></div>
+<script>
+  document.getElementById("generate").onclick = () => {
+    parent.postMessage({ pluginMessage: { type: "generate-colors" } }, "*");
+  };
+  window.onmessage = (selection) => {
+    let message = selection.data.pluginMessage;
+    console.log(selection);
+    console.log(message, "test");
+
+    const colorsContainer = document.getElementById("colors-container");
+    colorsContainer.innerHTML = JSON.stringify(message.colors);
+  };
+</script>
