@@ -1,26 +1,9 @@
-// This plugin will open a window to prompt the user to enter a number, and
-// it will then create that many rectangles on the screen.
-
-// This file holds the main code for the plugins. It has access to the *document*.
-// You can access browser APIs in the <script> tag inside "ui.html" which has a
-// full browser environment (see documentation).
-
-// This shows the HTML page in "ui.html".
 figma.showUI(__html__);
 
-// Calls to "parent.postMessage" from within the HTML page will trigger this
-// callback. The callback will be passed the "pluginMessage" property of the
-// posted message.
 figma.ui.onmessage = (msg) => {
-  // One way of distinguishing between different types of messages sent from
-  // your HTML page is to use an object with a "type" property like this.
   if (msg.type === "generate-colors") {
     generateColorsFromStyles();
   }
-
-  // Make sure to close the plugin when you're done. Otherwise the plugin will
-  // keep running, which shows the cancel button at the bottom of the screen.
-  /* figma.closePlugin(); */
 };
 
 const generateColorsFromStyles = () => {
@@ -30,16 +13,16 @@ const generateColorsFromStyles = () => {
   const solidFillStyles: PaintStyle[] = fillStyles.filter(
     (colorStyle) => colorStyle.paints[0].type === "SOLID"
   );
-  for (const style of solidFillStyles) {
-    const color = style.paints[0].color;
-    colors.push({ name: style.name, color: rgbToHex(color) });
+
+  for (let i = 0; i < solidFillStyles.length; i++) {
+    const currentSolidStyle = solidFillStyles[i].paints[0] as SolidPaint;
+    const color = currentSolidStyle.color;
+    colors.push({ name: solidFillStyles[i].name, color: rgbToHex(color) });
   }
 
   const tailwindColors = generateTailwindColors(colors);
-  console.log(tailwindColors);
 
   figma.ui.postMessage({ type: "tailwind-colors", colors: tailwindColors });
-  console.log("message sent");
 };
 
 const rgbToHex = (rgbColor: RGB) => {
@@ -54,28 +37,23 @@ const rgbToHex = (rgbColor: RGB) => {
   return `#${rHex}${gHex}${bHex}`;
 };
 
-const generateTailwindColors = (colors) => {
-  const tailwindColors = {};
+const generateTailwindColors = (colors: { name: string; color: string }[]) => {
+  const tailwindColors: { [key: string]: string | { [key: string]: string } } =
+    {};
 
   colors.forEach((color) => {
     const [prefix, variant] = color.name.split("/");
-    console.log(prefix, variant);
-    const name = color.name.replace("/", "-");
     if (variant) {
-      tailwindColors[prefix] = {
-        ...tailwindColors[prefix],
+      tailwindColors[prefix.toLowerCase()] = {
+        ...(tailwindColors[prefix.toLowerCase()] as Record<string, string>),
         [variant]: color.color,
       };
     } else {
-      tailwindColors[prefix] = color.color;
+      tailwindColors[prefix.toLowerCase()] = color.color;
     }
   });
 
   return {
-    theme: {
-      extend: {
-        colors: tailwindColors,
-      },
-    },
+    colors: tailwindColors,
   };
 };

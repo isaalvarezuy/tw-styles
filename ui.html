@@ -1,16 +1,26 @@
 <button id="generate">Generate color styles</button>
-<button id="cancel">Cancel</button>
-<div id="colors-container"></div>
+<button id="copy">Copy JSON</button>
+<pre id="json-container" style="background: black, color"></pre>
 <script>
   document.getElementById("generate").onclick = () => {
     parent.postMessage({ pluginMessage: { type: "generate-colors" } }, "*");
   };
+  document.getElementById("copy").onclick = () => {
+    let text = document.getElementById("json-container").innerHTML;
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+
+    // Text copied successfully
+    console.log("Text copied to clipboard:", text);
+  };
   window.onmessage = (selection) => {
     let message = selection.data.pluginMessage;
-    console.log(selection);
-    console.log(message, "test");
 
-    const colorsContainer = document.getElementById("colors-container");
-    colorsContainer.innerHTML = JSON.stringify(message.colors);
+    const colorsContainer = document.getElementById("json-container");
+    colorsContainer.innerHTML = JSON.stringify(message.colors, undefined, 2);
   };
 </script>
